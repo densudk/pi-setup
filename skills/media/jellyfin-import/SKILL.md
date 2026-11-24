@@ -84,10 +84,10 @@ the host, then have the server rescan. A move crosses filesystems, so check that
 6. **Rescan and verify.**
 
    ```bash
-   K=$(jq -r JELLYFIN_API_KEY ~/.pi/agent/env.json)
+   K=$(jq -r .JELLYFIN_API_KEY ~/.pi/agent/env.json)
    H="Authorization: MediaBrowser Token=\"$K\""
    curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "$H" localhost:8096/Library/Refresh
-   curl -s -H "$H" 'localhost:8096/Items?Recursive=true&IncludeItemTypes=Movie&SearchTerm=Lose+a+Guy&Fields=Path'
+   curl -s -H "$H" 'localhost:8096/Items?Recursive=true&IncludeItemTypes=Movie&SearchTerm=How%20to%20Lose&Fields=Path,DateCreated'
    ```
 
    The realtime monitor usually sees the file within seconds; the refresh is the
