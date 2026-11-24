@@ -93,7 +93,9 @@ the host, then have the server rescan. A move crosses filesystems, so check that
    The realtime monitor usually sees the file within seconds; the refresh is the
    nudge. Done when the item's `Path` is the new file and its `Name` and
    `ProductionYear` are right. For an episode, ask for `IncludeItemTypes=Episode`
-   and the `S01E01` code instead.
+   and the `S01E01` code instead. Ask for `DateCreated` beside `Path`: an
+   unchanged date means the server re-pointed the existing entry at the new file,
+   a fresh one means it read the rename as a new file and the watch state is gone.
 
 7. **Empty the queue.** `rm -rf` the release folder, `.pad` leftovers included.
    Moving the file ends that torrent's seed, which is expected.
@@ -118,7 +120,5 @@ as versions of one entry: `Film (Year) - 2160p.mkv` beside `Film (Year) -
 
 - The API wants `Authorization: MediaBrowser Token="<key>"`. `?api_key=` and
   `X-Emby-Token` both answer 401.
-- Renaming a file the server already scanned is a delete and an add: the entry
-  returns as new and its watch state is gone. Rename before the first scan.
 - A season pack can be partly here. Move the finished episodes and leave the
   rest; a film waits for the whole file.
