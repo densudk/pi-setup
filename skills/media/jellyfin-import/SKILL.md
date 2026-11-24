@@ -11,7 +11,8 @@ Take what `torlink` downloaded, move it into the Jellyfin media store, and name
 it the way Jellyfin reads it. Neither library fetches online metadata
 (`EnableInternetProviders: false`), so the file name **is** the metadata: a clean
 `Title (Year)` is the difference between the film and an unmatched scene
-release.
+release. Subtitles are the one thing that comes from the network: every film
+leaves here with an English and a Russian track.
 
 | | |
 |---|---|
@@ -97,7 +98,41 @@ the host, then have the server rescan. A move crosses filesystems, so check that
    unchanged date means the server re-pointed the existing entry at the new file,
    a fresh one means it read the rename as a new file and the watch state is gone.
 
-7. **Empty the queue.** `rm -rf` the release folder, `.pad` leftovers included.
+7. **Subtitles: English and Russian, every film.** Done means `<base>.en.srt` and
+   `<base>.ru.srt` sit beside the video; two-letter tags, which Jellyfin reads as
+   `eng` and `rus`.
+
+   Harvest the release first: a `.srt` beside the video, or a `Subs/` folder.
+   Read the language off the file name (`English.srt`, `2_English.srt`, `…rus…`)
+   and rename into place.
+
+   Then fetch what is missing, one API call per language into the server's Open
+   Subtitles plugin, which holds the account (`$H` from step 6):
+
+   ```bash
+   id=$(curl -s -H "$H" 'localhost:8096/Items?Recursive=true&IncludeItemTypes=Movie&SearchTerm=How%20to%20Lose' | jq -r '.Items[0].Id')
+   for lang in rus eng; do
+     sid=$(curl -s -H "$H" "localhost:8096/Items/$id/RemoteSearch/Subtitles/$lang" | jq -r '.[0].Id // empty')
+     [[ -n $sid ]] && curl -s -o /dev/null -w "$lang %{http_code}\n" -X POST -H "$H" \
+       "localhost:8096/Items/$id/RemoteSearch/Subtitles/$sid"
+   done
+   ```
+
+   `204` is a download. The plugin writes `<base>.rus.srt` beside the video, so
+   rename it to `<base>.ru.srt`, rescan, and ask for the subtitle streams: two,
+   `eng` and `rus`, is the check. An episode takes the same two calls on its own
+   item id.
+
+   ```bash
+   curl -s -H "$H" 'localhost:8096/Items?Recursive=true&IncludeItemTypes=Movie&SearchTerm=How%20to%20Lose&Fields=Path,MediaSources' \
+     | jq '.Items[0].MediaSources[0].MediaStreams[]|select(.Type=="Subtitle")|{Language,Path}'
+   ```
+
+   An empty search result means Open Subtitles has nothing in that language:
+   leave the film without the track and name that title in the report. Never
+   invent or machine-translate one.
+
+8. **Empty the queue.** `rm -rf` the release folder, `.pad` leftovers included.
    Moving the file ends that torrent's seed, which is expected.
 
 ## Names
@@ -105,7 +140,8 @@ the host, then have the server rescan. A move crosses filesystems, so check that
 ```text
 movies/Film (Year)/
 ├── Film (Year).mp4              one video per folder
-├── Film (Year).en.srt           language tag; .forced / .sdh when they apply
+├── Film (Year).en.srt           both tracks, always; .forced / .sdh when they apply
+├── Film (Year).ru.srt
 └── poster.jpg                   local artwork — providers are off, so it lands here
 
 TV shows/Series (Year)/Season 01/
@@ -120,5 +156,10 @@ as versions of one entry: `Film (Year) - 2160p.mkv` beside `Film (Year) -
 
 - The API wants `Authorization: MediaBrowser Token="<key>"`. `?api_key=` and
   `X-Emby-Token` both answer 401.
+- The subtitle fetch writes into the media folder, so the container mounts
+  `./media:/media` rw. A `:ro` mount fails every download with
+  `Read-only file system : '/media/…'` in `~/jellyfin/config/log/`.
+- The Open Subtitles account allows about 20 downloads a day, so a whole-library
+  backfill stops early; pick the titles that matter or wait out the quota.
 - A season pack can be partly here. Move the finished episodes and leave the
   rest; a film waits for the whole file.
