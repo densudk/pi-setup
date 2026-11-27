@@ -65,7 +65,7 @@ fall back to the local SearXNG. See
 
 ### Skills
 
-`skills/` holds the 30 skills this package ships, grouped as `engineering/`,
+`skills/` holds the 28 skills this package ships, grouped as `engineering/`,
 `productivity/`, `design/`, `creative/`, `media/`, and tool skills at the top level
 (`agent-browser`, `ascii-animation`, …). Vault-only skills (``daily-planning``,
 ``weekly-review``, ``ocw-vault``) live in the vault itself:
@@ -88,9 +88,14 @@ fall back to the local SearXNG. See
    publishes a gif and mp4 that the PR body embeds.
 
 `/review-loop` is the independent check: one fresh `reviewer`, standards and
-spec conformance, at most three rounds. `/show-me` expands a TLDR into the
-detail. `/just-do-it` overrides the default push-back when the remaining
-questions are the agent's to decide.
+spec conformance, at most three rounds. For small changes with clear scope,
+work inline and run the relevant checks; skip the spec. Ask for more detail or
+tell the agent to proceed in plain language; neither needs a skill.
+
+Borrow from [Lauren Tan's pstack](https://github.com/cursor/plugins/tree/main/pstack)
+without installing another workflow: for risky changes, identify what must stay
+true in affected callers and prove it with a runnable check. Prefer a regression
+test or CI check over adding another instruction when a mistake recurs.
 
 **The invocation split.** A user-invoked skill starts or ends a phase the human
 picks: it sets `disable-model-invocation: true` and keeps a human-facing
@@ -109,8 +114,8 @@ says the phrase and the model cannot see the rules.
 `latex-pdf`, `pr`, `prototype`, `research`, `review-loop`, `self-improvement`,
 `tdd`, `unslop`, `wizard`, `workflow-engineering`, `writing-for-agents`.
 
-**User-invoked (10):** `ascii-animation`, `deep-research`, `grill`, `handoff`,
-`jellyfin-import`, `just-do-it`, `show-me`, `spec`, `teach`, `wait-what`.
+**User-invoked (8):** `ascii-animation`, `deep-research`, `grill`, `handoff`,
+`jellyfin-import`, `spec`, `teach`, `wait-what`.
 
 Research has two sizes. `research` is one background reader for one question.
 `deep-research` is the six-stage graph in
@@ -122,9 +127,10 @@ cheap path.
 
 **Ponytail.** The smallest-change discipline comes from
 [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail) (MIT).
-Its always-on rule is the `## Code` section of `PROMPT.md`, not a skill: it is a
-bias on every coding turn, and a hidden skill fires only when someone remembers
-it exists. Two procedures are skills because they are reports with an output
+Its default `full` instructions (snapshot [`ebd8654`](https://github.com/DietrichGebert/ponytail/tree/ebd8654),
+[license](docs/ponytail-LICENSE.txt)) are the `## Code` section of `PROMPT.md`,
+without the mode switches. The rules apply on every coding turn without needing
+a skill invocation. Two procedures are skills because they are reports with an output
 shape: [`audit`](skills/engineering/audit/) ranks a whole repo, and
 [`debt`](skills/engineering/debt/) collects every `shortcut:` comment into a
 ledger. Its levels (`lite`/`full`/`ultra`), mode flags, hooks and its review
