@@ -11,6 +11,8 @@ how z-stack actually works instead of importing another stack's playbook.
 
 ## Install
 
+### Pi: full package
+
 ```sh
 pi install git:github.com/densudk/pi-setup
 pi install npm:pi-web-access      # the search tool lives here, not in this repo
@@ -39,6 +41,21 @@ Enable or disable individual resources with the native TUI:
 ```sh
 pi config
 ```
+
+### Codex, Claude Code, and OpenCode: portable skills
+
+From your project directory, install the tested starter set with the
+[`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills@1.9.1 add densudk/pi-setup --agent codex claude-code opencode --skill tdd codebase-design domain-modeling --yes
+```
+
+This installs into the current project. Omit any `--agent` targets you don't
+use. Keep `tdd` and `codebase-design` together: TDD links to the design reference.
+This does not install the prompt, Pi extensions, or Pi-specific workflows like
+`full-send`. Copy any default rules you want from [`PROMPT.md`](PROMPT.md) into
+your host's instructions rather than replacing existing instructions.
 
 Agents editing this repo: read [AGENTS.md](AGENTS.md) first — the checkout is a
 cache of `origin/main` and pi deletes anything not pushed.
