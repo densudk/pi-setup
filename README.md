@@ -1,8 +1,13 @@
-# pi-setup
+# Zander Stack (z-stack)
 
-Denis's personal [pi](https://pi.dev) package: the extensions, shared lib and
-skills the personal agent loads, on every device. Install it once per agent dir;
+Denis's AI coding setup, built on [Pi](https://pi.dev). `pi-setup` is the package
+that ships its prompt, skills, and extensions. Install it once per agent dir;
 the code syncs through git, the machine-local config does not.
+
+Work inline when the task is clear. Write a spec when decisions need to survive
+a session. Prove risky behavior with a runnable check. Add a skill only when a
+repeatable procedure needs more than a plain-language request; write it around
+how z-stack actually works instead of importing another stack's playbook.
 
 ## Install
 
