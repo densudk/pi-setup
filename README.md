@@ -70,8 +70,8 @@ fall back to the local SearXNG. See
 
 ### Skills
 
-`skills/` holds the 28 skills this package ships, grouped as `engineering/`,
-`productivity/`, `design/`, `creative/`, `media/`, and tool skills at the top level
+`skills/` holds the 27 skills this package ships, grouped as `engineering/`,
+`productivity/`, `design/`, `creative/`, and tool skills at the top level
 (`agent-browser`, `ascii-animation`, …). Vault-only skills (``daily-planning``,
 ``weekly-review``, ``ocw-vault``) live in the vault itself:
 `~/Documents/Notes/.pi/skills/`.
@@ -119,8 +119,8 @@ says the phrase and the model cannot see the rules.
 `latex-pdf`, `pr`, `prototype`, `research`, `review-loop`, `self-improvement`,
 `tdd`, `unslop`, `wizard`, `workflow-engineering`, `writing-for-agents`.
 
-**User-invoked (8):** `ascii-animation`, `deep-research`, `grill`, `handoff`,
-`jellyfin-import`, `spec`, `teach`, `wait-what`.
+**User-invoked (7):** `ascii-animation`, `deep-research`, `grill`, `handoff`,
+`spec`, `teach`, `wait-what`.
 
 Research has two sizes. `research` is one background reader for one question.
 `deep-research` is the six-stage graph in

@@ -34,7 +34,6 @@ const USER_INVOKED = new Set([
 	"deep-research",
 	"grill",
 	"handoff",
-	"jellyfin-import",
 	"spec",
 	"teach",
 	"wait-what",
@@ -80,6 +79,10 @@ for (const file of files) {
 	}
 	if (seen.has(name)) errors.push(`${rel}: duplicate skill name "${name}"`);
 	seen.add(name);
+
+	if (!MODEL_INVOKED.has(name) && !USER_INVOKED.has(name)) {
+		errors.push(`${rel}: ${name} is not listed in the skill catalog`);
+	}
 
 	const disabled = /^disable-model-invocation:\s*true$/m.test(fm);
 	if (MODEL_INVOKED.has(name) === disabled) {
