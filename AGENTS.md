@@ -34,24 +34,18 @@ know before touching it.
   `subagent` in every request and hides it from codemode. Upgrade by rebasing
   the branch onto the new upstream tag. See [README.md](README.md#subagents-come-from-a-fork).
 - **Our subagent profiles live in `agents/`**, declared under
-  `pi.subagents.agents` in `package.json`. `subagents.disableBuiltins` is `true`,
-  so this directory is the whole catalog: `reviewer`, `researcher`, `worker`,
-  `demo-recorder`. The first three are copies of the profiles the
-  `pi-subagents` fork bundles, shadowing them by name (package beats builtin);
+  `pi.subagents.agents` in `package.json`. On devices using the fork, set
+  `subagents.disableBuiltins` to make this directory the whole catalog:
+  `reviewer`, `researcher`, `worker`, `demo-recorder`. The first three shadow
+  the profiles bundled by the fork (package beats builtin);
   `demo-recorder` is ours alone, with no upstream to shadow, so it carries no
   diff to keep. Keep the other three's diff to the lines
   this setup needs and never fork a whole prompt for style. A per-task skill or
   tool loadout is a launch parameter (`skill`, `tools`), not an
   `agentOverrides` block: there is nothing to re-diff.
-- **One model on `opencode-go`, for the session and its children.**
-  `enabledModels` in the device's `~/.pi/agent/settings.json` scopes the session
-  to `opencode-go/deepseek-v4.1-flash`, and `subagents.modelScope` with
-  `enforce` + `strict` allows the same id, so the `subagent` tool never runs a
-  child on anything else. `delegate_task` resolves its own model and the scope
-  does not reach it, so `PROMPT.md` carries the one-model rule for every path.
-  Skills do not pass `model`. A new provider is one appended pattern, never a
-  widened glob. See
-  [docs/configuration.md](docs/configuration.md#models).
+- **Model settings are per device.** See [Models](docs/configuration.md#models)
+  for session defaults. Delegation is optional and configured separately;
+  skills use the configured child model rather than passing `model`.
 - **The prompt is `PROMPT.md`, installed as the agent-dir `AGENTS.md`.** pi
   has two mechanisms and we use the lighter one: `<agent-dir>/AGENTS.md` is user
   instructions loaded beside pi's own prompt, while `<agent-dir>/SYSTEM.md`

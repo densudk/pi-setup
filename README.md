@@ -148,11 +148,11 @@ NixOS config, and the skill falls back to system chromium through `CHROME_PATH`.
 
 ### Agent profiles
 
-`agents/` holds the subagent profiles this setup runs, declared in
+`agents/` holds profiles for devices that opt in to the subagent fork, declared in
 `package.json` under `pi.subagents.agents` so pi-subagents discovers them as
 package agents — source priority 1, above the fork's builtin profiles of the
-same name. `subagents.disableBuiltins` is `true`, so this directory is the whole
-catalog; nothing else appears in the agent list.
+same name. Set `subagents.disableBuiltins` on devices where this directory
+should be the whole catalog.
 
 | profile | what this setup changes |
 |---|---|
@@ -161,11 +161,8 @@ catalog; nothing else appears in the agent list.
 | `worker` | upstream's profile verbatim: the single writer, `contact_supervisor` for a decision it cannot make, fresh context, `progress.md`. |
 | `demo-recorder` | drives a real browser through a built interface, records the walk-through, publishes it, and returns the markdown a PR embeds. `read` and `bash` only: it runs, looks and records, it does not edit the repo. `thinking: low`, because this is a short mechanical task. |
 
-All four inherit `opencode-go/deepseek-v4.1-flash` from `subagents.defaultModel`,
-and `defaultThinking` is `high`. The one pin is `demo-recorder` at
-`thinking: low`: clicking through a screen does not need the reasoning budget.
-No skill passes a `model` argument; a per-run override still exists in the fork
-and stays unused.
+Skills use the device's configured child model rather than passing `model`.
+Session model preferences do not set child defaults; see [Models](docs/configuration.md#models).
 
 A per-task loadout is a launch parameter, not a copy of the profile:
 
@@ -191,19 +188,16 @@ The package is built to keep the request small. Nothing here is declared to
 the model: every tool registers with `exposure: "deferred"`, so it is reachable
 as `tools.<name>(…)` inside a `codemode` script and appears neither in the
 request nor in the codemode description (`searchTools()` and `ALL_TOOLS` find
-it when the name is unknown). Only the 20 model-invoked skills are advertised,
-and only as name, description and path: 9.0k characters, ~2.3k tokens on pi
-1.4.0.
+it when the name is unknown). Pi advertises only model-invoked skills, as
+names, descriptions and paths.
 
 `PROMPT.md` in this repo is the prompt: a device symlinks it to
 `~/.pi/agent/AGENTS.md`, which pi loads as user instructions beside its own
 prompt. `SYSTEM.md` is not used, because it *replaces* pi's prompt and takes the
 tool descriptions and docs paths with it.
 
-The script-only shape is still about three times smaller than declaring the
-tools. The trade is explicit: the agent does not suggest a skill, and nothing in
-the prompt says a calendar exists. The user, a skill body, or a `searchTools()`
-call has to name the tool.
+Deferred tools cost no space in the initial tool list. The user, a skill,
+or a `searchTools()` call has to point the agent to them.
 
 A device matches that shape with three things in `~/.pi/agent`:
 
@@ -211,13 +205,11 @@ A device matches that shape with three things in `~/.pi/agent`:
 |---|---|
 | `AGENTS.md` → symlink to `PROMPT.md` in this checkout | the prompt is versioned here, so a push plus `pi update` changes it with no copy step |
 | `settings.json` → `"defaultTools": ["+codemode"]` | codemode is opt-in in pi; without it there is no way to reach the tools |
-| `settings.json` → `"packages"` | only packages whose tools are script-only: this one, and the `pi-subagents` fork below |
+| `settings.json` → `"packages"` | this package and `pi-web-access`; add the subagent fork only on devices that need delegation |
 
 ```sh
-# a machine with a working copy: an edit is live on the next turn
-ln -sf ~/dev/pi-setup/PROMPT.md ~/.pi/agent/AGENTS.md
-# a machine with only the package: the checkout, refreshed by `pi update`
-ln -sf ~/.pi/agent/git/github.com/densudk/pi-setup/PROMPT.md ~/.pi/agent/AGENTS.md
+# Use the package checkout path shown by `pi list`.
+ln -s /path/to/pi-setup/PROMPT.md ~/.pi/agent/AGENTS.md
 ```
 
 `PI_TOOL_EXPOSURE=direct pi` declares every tool of this package in the request
@@ -225,6 +217,10 @@ for a session that should not need a script; `codemode` lists them in the
 codemode description instead.
 
 ### Subagents come from a fork
+
+The fork is optional. Skills that require a child (including `review-loop`
+and `full-send`) need it enabled; an inline self-review does not replace an
+independent review.
 
 `subagent`, `bg_wait`, `subagent_supervisor` and `contact_supervisor` come from
 [densudk/pi-subagents](https://github.com/densudk/pi-subagents), branch
@@ -243,7 +239,7 @@ too (`tools.subagent` is then undefined), and the package has no exposure knob.
 Hence a fork rather than a config line. Child agents still get declared tools —
 only the parent-facing registrations changed.
 
-What the fork offers is then narrowed per device in
+If you enable the fork, narrow its features per device in
 `~/.pi/agent/extensions/subagent/config.json`:
 
 ```json
@@ -319,7 +315,7 @@ European languages auto-detected.
 | `~/.pi/agent/asr.json` | optional; transcription binary name, timeout, output cap, artifact directory and chunk length |
 | `~/.pi/agent/calendar.json` | optional; sensible defaults for cal.sudakov.site |
 | `~/.pi/agent/extensions/subagent/config.json` | which pi-subagents features stay reachable on this device (missions, lanes, remote machines, management, budgets off) |
-| `~/.pi/agent/settings.json` | pi's own settings: model, theme, packages, and the `subagents` block (`disableBuiltins`, `defaultModel`, `defaultThinking`) |
+| `~/.pi/agent/settings.json` | pi's own settings: [model defaults](docs/configuration.md#models), theme, packages, and optional subagent settings |
 | `~/.pi/agent/security.json.retired` | the old vault mapping (variable → Bitwarden item); safe to delete |
 
 Per-device files are not in git. On a new machine, copy them over.

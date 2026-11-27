@@ -100,69 +100,45 @@ not `direct`, or it declares itself anyway.
 
 ## Models
 
-One model, on `opencode-go`: `deepseek-v4.1-flash` holds the session and every
-child. Subagents run on it and nothing else. That provider lists thirty more;
-they stay out of reach.
-
-The keys in `~/.pi/agent/settings.json`:
+Merge these keys into `~/.pi/agent/settings.json`; keep machine-specific
+settings and package declarations.
 
 ```json
 {
-  "defaultModel": "deepseek-v4.1-flash",
-  "defaultProvider": "opencode-go",
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-6.2-sol",
+  "defaultThinkingLevel": "medium",
   "enabledModels": [
-    "opencode-go/deepseek-v4.1-flash"
+    "openai/gpt-6.2-sol",
+    "openai/gpt-6-luna",
+    "openai/gpt-6.2-astra"
   ],
-  "subagents": {
-    "defaultModel": "opencode-go/deepseek-v4.1-flash",
-    "defaultProvider": "opencode-go",
-    "modelScope": {
-      "enforce": true,
-      "strict": true,
-      "allow": ["opencode-go/deepseek-v4.1-flash"]
-    }
+  "modelThinkingLevels": {
+    "openai/gpt-6.2-sol": "medium",
+    "openai/gpt-6-luna": "low",
+    "openai/gpt-6.2-astra": "medium"
   }
 }
 ```
 
-The two scopes agree, on purpose:
+- **Sol / medium** for everyday coding and judgment. Use `/thinking` to raise
+  effort for hard debugging or review when the task warrants it.
+- **Luna / low** for bounded edits, extraction and other short, well-specified
+  tasks. **Astra / medium** is a manual escalation for difficult work, not a
+  fallback that Pi launches automatically.
+- `enabledModels` limits startup selection and the `Ctrl+P` cycle, not what
+  you can pick from the full `/model` catalog. Start a fresh session to see
+  the new default; resumed sessions keep their recorded model and effort.
+- These settings do not configure delegation. Only set child models on
+  devices with a working subagent extension; see the
+  [optional fork](../README.md#subagents-come-from-a-fork). Verify the child
+  routing before relying on it. Prefer Sol for independent review and Luna
+  for narrowly scoped child tasks if you enable delegation; keep Astra manual.
 
-- **`enabledModels` is a scope, not a ban.** It is the list `/scoped-models`
-  writes and the same format as `--models`: patterns matched against
-  `provider/id`, where `*` is the only special character. Startup ignores a
-  saved default that fell out of scope, `Ctrl+P` cycles only these entries, and
-  `/model` opens on the scoped list. `Tab` in that picker still switches to all,
-  and `pi --model <id>` still wins: the scope keeps the catalog out of the way
-  and does not stop a deliberate choice.
-- **`subagents.modelScope` is a ban.** `enforce` rejects an explicit
-  `model=`/`--model` before the child starts, `strict` rejects an inherited
-  model too, and the allowlist is the flash id as a full `provider/id`. The
-  check runs on the resolved model, so a fuzzy id or a `:thinking` suffix
-  cannot slip past it. It guards the `subagent` tool. A `delegate_task` child is
-  resolved by the T3 orchestrator before pi sees it, so the scope never runs on
-  that path; the one-model rule in `PROMPT.md` is what holds it.
-
-The session scope names the same single id as the ban, so there is one model to
-pick: the alternate is gone from `Ctrl+P` and the catalog stays one `Tab` away
-when a deliberate `--model` wants something else.
-
-This cannot live in `models.json`. A provider's `models` entries add or replace
-models and `modelOverrides` only rewrites fields, so nothing removes a model
-from a catalog; pruning `opencode-go` there would mean redefining the whole
-provider with copied metadata that goes stale at the next catalog refresh.
-
-**Adding a provider** is one line: append its `provider/id` patterns to
-`enabledModels`. `modelScope` stays as it is — "every child is the flash model"
-does not change with the provider. A new pattern is a new entry in the list,
-never a widened glob. An id that stops existing is silent except for a `No
-models match pattern` warning at startup.
-
-**Adding a session model** is the other direction: an id in `enabledModels` and
-not in `subagents.modelScope.allow` is a model a human can pick and a child
-cannot. Nothing gets that entry by default.
-
-`settings.json` is pi's file and per device, so this block is re-applied on each
-device; `/reload` picks it up.
+Pi's built-in catalog already uses Responses for these chat models. No
+`models.json` overrides are needed. For config checks, inspect Pi locally
+with `PI_OFFLINE=1 pi --list-models gpt-6`; do not send test prompts to Sol or
+Astra without permission.
 
 ## Search
 
